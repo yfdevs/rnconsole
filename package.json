@@ -1,0 +1,84 @@
+{
+  "name": "rnconsole",
+  "version": "0.1.0",
+  "description": "An in-app network and console inspector for React Native",
+  "source": "./src/index.tsx",
+  "files": [
+    "lib",
+    "src",
+    "!**/__tests__",
+    "!**/*.spec.ts",
+    "!**/*.spec.tsx"
+  ],
+  "type": "module",
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
+  "react-native": "./src/index.tsx",
+  "exports": {
+    ".": {
+      "source": "./src/index.tsx",
+      "react-native": "./src/index.tsx",
+      "types": "./lib/index.d.ts",
+      "browser": "./lib/index.web.js",
+      "import": "./lib/index.js",
+      "default": "./lib/index.js"
+    },
+    "./theme.css": "./src/ui/theme.css",
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/"
+  },
+  "scripts": {
+    "build": "vp pack",
+    "check": "vp check",
+    "lint": "vp lint",
+    "format": "vp fmt",
+    "test": "vp test",
+    "test:watch": "vp test watch",
+    "prepare": "vp pack",
+    "example": "vp run --filter rnconsole-example start"
+  },
+  "devDependencies": {
+    "@react-native/metro-config": "0.86.3",
+    "@types/react": "^19.2.14",
+    "@types/react-test-renderer": "^19.3.0",
+    "heroui-native": "^1.0.10",
+    "lucide-react-native": "^1.55.0",
+    "react": "19.2.3",
+    "react-native": "0.86.3",
+    "react-native-gesture-handler": "~2.32.0",
+    "react-native-reanimated": "4.5.1",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-screens": "~4.26.2",
+    "react-native-svg": "15.15.4",
+    "react-native-worklets": "0.10.1",
+    "react-test-renderer": "19.2.3",
+    "tailwind-merge": "^3.7.0",
+    "tailwind-variants": "^3.3.1",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^5.8.3",
+    "uniwind": "^1.12.2",
+    "vite": "npm:@voidzero-dev/vite-plus-core@1.1.0",
+    "vite-plus": "1.1.0"
+  },
+  "peerDependencies": {
+    "heroui-native": ">=1.0.5",
+    "lucide-react-native": ">=0.468",
+    "react": "*",
+    "react-native": ">=0.81",
+    "react-native-gesture-handler": ">=2.28",
+    "react-native-reanimated": ">=4.1.1",
+    "react-native-safe-area-context": ">=5.6",
+    "react-native-svg": ">=15",
+    "react-native-worklets": ">=0.5.1",
+    "tailwind-merge": ">=3.4",
+    "tailwind-variants": ">=3.2.2",
+    "tailwindcss": ">=4",
+    "uniwind": ">=1.11"
+  },
+  "engines": {
+    "node": "^22.18.0 || ^24.11.0 || >=26.0.0"
+  },
+  "packageManager": "pnpm@12.11.2"
+}

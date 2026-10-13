@@ -1,0 +1,13 @@
+{
+  "expo": {
+    "name": "rnconsole-example",
+    "slug": "rnconsole-example",
+    "description": "Example app for rnconsole",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "platforms": ["ios", "android", "web"],
+    "ios": {
+      "supportsTablet": true
+    }
+  }
+}

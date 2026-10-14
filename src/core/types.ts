@@ -2,7 +2,7 @@ import NetworkRequestInfo from './NetworkRequestInfo';
 
 export type Headers = { [header: string]: string };
 
-export type RequestMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+export type RequestMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD';
 
 export type StartNetworkLoggingOptions = {
   /**

@@ -1,4 +1,5 @@
 import XHRInterceptor from './XHRInterceptor';
+import FetchInterceptor from './FetchInterceptor';
 import NetworkRequestInfo from './NetworkRequestInfo';
 import { Headers, RequestMethod, StartNetworkLoggingOptions } from './types';
 import extractHost from '../utils/extractHost';
@@ -146,6 +147,54 @@ export default class Logger {
     this.debouncedCallback();
   };
 
+  private fetchRequestCallback = (
+    method: string,
+    url: string,
+    headers: Headers,
+    body: string
+  ): XHR => {
+    const request = {} as XHR;
+    this.openCallback(method as RequestMethod, url, request);
+    if (request._index === undefined) return request;
+
+    this.updateRequest(request._index, { requestHeaders: headers });
+    this.sendCallback(body, request);
+    return request;
+  };
+
+  private fetchRequestBodyCallback = (body: string, request: unknown) => {
+    const fetchRequest = request as XHR;
+    if (fetchRequest?._index === undefined) return;
+    this.updateRequest(fetchRequest._index, { dataSent: body });
+    this.debouncedCallback();
+  };
+
+  private fetchHeaderReceivedCallback = (
+    responseContentType: string,
+    responseSize: number,
+    responseHeaders: Headers,
+    request: unknown
+  ) => {
+    const fetchRequest = request as XHR;
+    if (fetchRequest?._index === undefined) return;
+    this.updateRequest(fetchRequest._index, {
+      responseContentType,
+      responseSize,
+      responseHeaders,
+    });
+    this.debouncedCallback();
+  };
+
+  private fetchResponseCallback = (
+    status: number,
+    response: string,
+    responseURL: string,
+    responseType: string,
+    request: unknown
+  ) => {
+    this.responseCallback(status, 0, response, responseURL, responseType, request as XHR);
+  };
+
   enableXHRInterception = (options?: StartNetworkLoggingOptions) => {
     if (this.enabled || (XHRInterceptor.isInterceptorEnabled() && !options?.forceEnable)) {
       if (!this.enabled) {
@@ -199,6 +248,12 @@ export default class Logger {
     XHRInterceptor.setResponseCallback(this.responseCallback);
 
     XHRInterceptor.enableInterception();
+
+    FetchInterceptor.setRequestCallback(this.fetchRequestCallback);
+    FetchInterceptor.setRequestBodyCallback(this.fetchRequestBodyCallback);
+    FetchInterceptor.setHeaderReceivedCallback(this.fetchHeaderReceivedCallback);
+    FetchInterceptor.setResponseCallback(this.fetchResponseCallback);
+    FetchInterceptor.enableInterception();
     this.enabled = true;
   };
 
@@ -251,5 +306,11 @@ export default class Logger {
     XHRInterceptor.setResponseCallback(noop);
 
     XHRInterceptor.disableInterception();
+
+    FetchInterceptor.setRequestCallback(noop);
+    FetchInterceptor.setRequestBodyCallback(noop);
+    FetchInterceptor.setHeaderReceivedCallback(noop);
+    FetchInterceptor.setResponseCallback(noop);
+    FetchInterceptor.disableInterception();
   };
 }

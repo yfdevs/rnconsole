@@ -1,6 +1,6 @@
 {
   "name": "@yfdevs/rnconsole",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "An in-app network and console inspector for React Native",
   "homepage": "https://github.com/yfdevs/rnconsole#readme",
   "bugs": {

@@ -17,6 +17,18 @@ vi.mock('../../../src/core/XHRInterceptor', () => ({
   },
 }));
 
+vi.mock('../../../src/core/FetchInterceptor', () => ({
+  default: {
+    isInterceptorEnabled: vi.fn(),
+    setRequestCallback: vi.fn(),
+    setRequestBodyCallback: vi.fn(),
+    setHeaderReceivedCallback: vi.fn(),
+    setResponseCallback: vi.fn(),
+    enableInterception: vi.fn(),
+    disableInterception: vi.fn(),
+  },
+}));
+
 vi.mock('../../../src/utils/logger', () => ({
   warn: vi.fn(() => {
     throw new Error('Unexpected warning');

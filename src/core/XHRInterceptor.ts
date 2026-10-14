@@ -1,3 +1,5 @@
+import serializeRequestBody from '../utils/serializeRequestBody';
+
 // Type declarations for globals provided by React Native runtime
 declare class URL {
   constructor(url: string, base?: string);
@@ -118,7 +120,7 @@ function enableInterception(): void {
   XMLHttpRequest.prototype.send = function (body?: any): void {
     const xhr = this as any;
 
-    const dataString = body === null || body === undefined ? '' : String(body);
+    const dataString = serializeRequestBody(body);
     try {
       sendCallback(dataString, xhr);
     } catch {

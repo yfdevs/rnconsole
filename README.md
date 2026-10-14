@@ -35,7 +35,8 @@ export default function App() {
 
 Expo 开发环境可能已启用自己的 XHR 拦截器；示例中可使用
 `startNetworkLogging({ forceEnable: true })` 让 rnconsole 接管记录。当前版本记录
-`XMLHttpRequest` 请求；若应用使用新版 React Native 的原生 `fetch` 路径，需要按需改用 XHR 或后续接入 fetch 拦截器。
+同时支持 `XMLHttpRequest` 和 React Native 原生 `fetch` 请求，并展示 JSON、文本、URLSearchParams
+以及 React Native FormData payload。
 
 CSS 入口需要载入 HeroUI 和 rnconsole 主题：
 

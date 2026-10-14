@@ -17,7 +17,7 @@ import {
   stopConsoleLogging,
   stopNetworkLogging,
   type ThemeName,
-} from 'rnconsole';
+} from '@yfdevs/rnconsole';
 
 LogBox.ignoreLogs(['rnconsole sample warning', 'rnconsole sample error']);
 

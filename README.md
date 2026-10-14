@@ -7,7 +7,7 @@ React Native 应用内调试工具。默认以浮动按钮挂载，点击后打�
 安装库以及 HeroUI Native 所需依赖：
 
 ```bash
-pnpm add rnconsole heroui-native uniwind tailwindcss react-native-gesture-handler react-native-reanimated react-native-safe-area-context react-native-worklets react-native-svg lucide-react-native tailwind-merge tailwind-variants
+pnpm add @yfdevs/rnconsole heroui-native uniwind tailwindcss react-native-gesture-handler react-native-reanimated react-native-safe-area-context react-native-worklets react-native-svg lucide-react-native tailwind-merge tailwind-variants
 ```
 
 在应用入口最前面引入手势库，并用 Provider 包住应用：
@@ -16,7 +16,7 @@ pnpm add rnconsole heroui-native uniwind tailwindcss react-native-gesture-handle
 import 'react-native-gesture-handler';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { HeroUINativeProvider } from 'heroui-native/provider';
-import { NetworkLoggerOverlay, startConsoleLogging, startNetworkLogging } from 'rnconsole';
+import { NetworkLoggerOverlay, startConsoleLogging, startNetworkLogging } from '@yfdevs/rnconsole';
 
 startNetworkLogging();
 startConsoleLogging();
@@ -43,9 +43,9 @@ CSS 入口需要载入 HeroUI 和 rnconsole 主题：
 @import 'tailwindcss';
 @import 'uniwind';
 @import 'heroui-native/styles';
-@import 'rnconsole/theme.css';
+@import '@yfdevs/rnconsole/theme.css';
 
-@source '../node_modules/rnconsole/src';
+@source '../node_modules/@yfdevs/rnconsole/src';
 ```
 
 如果需要把面板嵌入已有页面，仍可直接使用默认导出的 `NetworkLogger`。

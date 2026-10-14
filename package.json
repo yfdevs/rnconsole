@@ -1,7 +1,15 @@
 {
-  "name": "rnconsole",
+  "name": "@yfdevs/rnconsole",
   "version": "0.1.0",
   "description": "An in-app network and console inspector for React Native",
+  "homepage": "https://github.com/yfdevs/rnconsole#readme",
+  "bugs": {
+    "url": "https://github.com/yfdevs/rnconsole/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yfdevs/rnconsole.git"
+  },
   "source": "./src/index.tsx",
   "files": [
     "lib",
@@ -27,6 +35,7 @@
     "./package.json": "./package.json"
   },
   "publishConfig": {
+    "access": "public",
     "registry": "https://registry.npmjs.org/"
   },
   "scripts": {

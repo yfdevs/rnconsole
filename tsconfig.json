@@ -3,7 +3,7 @@
     "rootDir": ".",
     "paths": {
       "@testing-library/react-native": ["./test/support/testing-library"],
-      "rnconsole": ["./src/index"]
+      "@yfdevs/rnconsole": ["./src/index"]
     },
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,

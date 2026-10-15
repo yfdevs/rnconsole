@@ -1,4 +1,4 @@
-import serializeRequestBody from '../../../src/utils/serializeRequestBody';
+import serializeRequestBody, { getRequestBodyType } from '../../../src/utils/serializeRequestBody';
 
 describe('serializeRequestBody', () => {
   it('serializes object payloads instead of showing [object Object]', () => {
@@ -17,5 +17,14 @@ describe('serializeRequestBody', () => {
         ],
       })
     ).toBe('{"tag":["one","two"],"file":"[Blob (text/plain), 12 bytes]"}');
+  });
+});
+
+describe('getRequestBodyType', () => {
+  it('distinguishes form data, URL-encoded data, JSON, and binary bodies', () => {
+    expect(getRequestBodyType({ _parts: [['name', 'rnconsole']] })).toBe('form-data');
+    expect(getRequestBodyType(new URLSearchParams({ query: 'network' }))).toBe('urlencoded');
+    expect(getRequestBodyType({ enabled: true })).toBe('json');
+    expect(getRequestBodyType(new ArrayBuffer(4))).toBe('binary');
   });
 });

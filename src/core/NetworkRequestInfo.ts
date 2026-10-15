@@ -1,5 +1,6 @@
 import { Headers, NetworkRequestInfoRow, RequestMethod } from './types';
 import fromEntries from '../utils/fromEntries';
+import type { RequestBodyType } from '../utils/serializeRequestBody';
 
 export default class NetworkRequestInfo {
   id = '';
@@ -8,6 +9,7 @@ export default class NetworkRequestInfo {
   method: RequestMethod;
   status: number = -1;
   dataSent = '';
+  requestBodyType: RequestBodyType = 'unknown';
   responseContentType = '';
   responseSize = 0;
   requestHeaders: Headers = {};

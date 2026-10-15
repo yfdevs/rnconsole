@@ -45,6 +45,10 @@ export default defineConfig({
         replacement: new URL('./test/support/testing-library.ts', import.meta.url).pathname,
       },
       {
+        find: /^@react-native-clipboard\/clipboard$/,
+        replacement: new URL('./test/mocks/clipboard.ts', import.meta.url).pathname,
+      },
+      {
         find: /^uniwind$/,
         replacement: new URL('./test/mocks/uniwind.tsx', import.meta.url).pathname,
       },
@@ -74,6 +78,7 @@ export default defineConfig({
     dts: true,
     deps: {
       neverBundle: [
+        '@react-native-clipboard/clipboard',
         'heroui-native',
         'react',
         'react-native',

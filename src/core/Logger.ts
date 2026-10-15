@@ -6,6 +6,7 @@ import extractHost from '../utils/extractHost';
 import { warn } from '../utils/logger';
 import debounce from '../utils/debounce';
 import { LOGGER_REFRESH_RATE, LOGGER_MAX_REQUESTS } from './constants';
+import type { RequestBodyType } from '../utils/serializeRequestBody';
 
 let nextXHRId = 0;
 
@@ -120,10 +121,11 @@ export default class Logger {
     });
   };
 
-  private sendCallback = (data: string, xhr: XHR) => {
+  private sendCallback = (data: string, xhr: XHR, requestBodyType: RequestBodyType = 'unknown') => {
     this.updateRequest(xhr._index, {
       startTime: Date.now(),
       dataSent: data,
+      requestBodyType,
     });
     this.debouncedCallback();
   };
@@ -151,14 +153,15 @@ export default class Logger {
     method: string,
     url: string,
     headers: Headers,
-    body: string
+    body: string,
+    requestBodyType: RequestBodyType
   ): XHR => {
     const request = {} as XHR;
     this.openCallback(method as RequestMethod, url, request);
     if (request._index === undefined) return request;
 
     this.updateRequest(request._index, { requestHeaders: headers });
-    this.sendCallback(body, request);
+    this.sendCallback(body, request, requestBodyType);
     return request;
   };
 

@@ -16,6 +16,7 @@ const queries = (root: ReactTestInstance) => {
   };
 
   return {
+    getByA11yLabel: (accessibilityLabel: string) => root.findByProps({ accessibilityLabel }),
     getByTestId: (testID: string) => root.findByProps({ testID }),
     queryByTestId: (testID: string) => root.findAllByProps({ testID })[0] ?? null,
     queryAllByText,

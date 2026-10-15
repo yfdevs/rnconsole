@@ -1,7 +1,16 @@
-import serializeRequestBody from '../utils/serializeRequestBody';
+import serializeRequestBody, {
+  getRequestBodyType,
+  type RequestBodyType,
+} from '../utils/serializeRequestBody';
 import type { Headers } from './types';
 
-type RequestCallback = (method: string, url: string, headers: Headers, body: string) => unknown;
+type RequestCallback = (
+  method: string,
+  url: string,
+  headers: Headers,
+  body: string,
+  bodyType: RequestBodyType
+) => unknown;
 type RequestBodyCallback = (body: string, request: unknown) => void;
 type HeaderReceivedCallback = (
   contentType: string,
@@ -58,7 +67,13 @@ function enableInterception(): void {
 
     let request: unknown;
     try {
-      request = requestCallback(method, url, headers, body);
+      request = requestCallback(
+        method,
+        url,
+        headers,
+        body,
+        hasInitBody ? getRequestBodyType(init.body) : 'unknown'
+      );
     } catch {
       // Logging must never break the application request.
     }

@@ -37,7 +37,8 @@ describe('FetchInterceptor', () => {
       'POST',
       'https://example.com/items',
       { 'content-type': 'application/json' },
-      '{"name":"console"}'
+      '{"name":"console"}',
+      'text'
     );
     expect(headerCallback).toHaveBeenCalledWith(
       'application/json',

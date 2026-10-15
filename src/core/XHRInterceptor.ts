@@ -1,4 +1,4 @@
-import serializeRequestBody from '../utils/serializeRequestBody';
+import serializeRequestBody, { getRequestBodyType } from '../utils/serializeRequestBody';
 
 // Type declarations for globals provided by React Native runtime
 declare class URL {
@@ -122,7 +122,7 @@ function enableInterception(): void {
 
     const dataString = serializeRequestBody(body);
     try {
-      sendCallback(dataString, xhr);
+      sendCallback(dataString, xhr, getRequestBodyType(body));
     } catch {
       // Interceptor callbacks must not break network requests.
     }

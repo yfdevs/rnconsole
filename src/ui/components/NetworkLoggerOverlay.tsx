@@ -11,7 +11,7 @@ interface Props extends Omit<NetworkLoggerProps, 'onClose'> {
 }
 
 const NetworkLoggerOverlay: React.FC<Props> = ({
-  buttonLabel = 'Inspect',
+  buttonLabel = 'Open network inspector',
   initiallyOpen = false,
   ...loggerProps
 }) => {
@@ -22,14 +22,13 @@ const NetworkLoggerOverlay: React.FC<Props> = ({
     <>
       <View className="absolute inset-0 items-end justify-end p-5" pointerEvents="box-none">
         <Button
-          accessibilityLabel="Open network inspector"
-          className="h-10 rounded-md px-3"
+          accessibilityLabel={buttonLabel}
+          className="h-12 w-12 rounded-full p-0"
+          isIconOnly
           onPress={() => setOpen(true)}
-          size="sm"
           variant="primary"
         >
-          <Activity color={accentForeground} size={18} />
-          <Button.Label>{buttonLabel}</Button.Label>
+          <Activity color={accentForeground} size={20} />
         </Button>
       </View>
       <Modal

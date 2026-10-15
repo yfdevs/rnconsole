@@ -1,11 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ScrollView, Share, Text, View } from 'react-native';
+import Clipboard from '@react-native-clipboard/clipboard';
 import { Button } from 'heroui-native/button';
 import { Chip } from 'heroui-native/chip';
 import { useThemeColor } from 'heroui-native/hooks';
 import { Tabs } from 'heroui-native/tabs';
 import ArrowLeft from 'lucide-react-native/icons/arrow-left';
-import Braces from 'lucide-react-native/icons/braces';
+import Check from 'lucide-react-native/icons/check';
+import Copy from 'lucide-react-native/icons/copy';
 import Share2 from 'lucide-react-native/icons/share-2';
 import type NetworkRequestInfo from '../../core/NetworkRequestInfo';
 import { cn } from '../../utils/cn';
@@ -54,6 +56,47 @@ const formatBytes = (size: number) => {
   return `${size} B`;
 };
 
+const entriesToRecord = (entries: Array<[string, string]>) =>
+  entries.reduce<Record<string, string | string[]>>((result, [name, value]) => {
+    const current = result[name];
+    result[name] =
+      current === undefined
+        ? value
+        : Array.isArray(current)
+          ? [...current, value]
+          : [current, value];
+    return result;
+  }, {});
+
+const parseParameters = (value: string) => {
+  try {
+    return entriesToRecord(Array.from(new URLSearchParams(value).entries()));
+  } catch {
+    return {};
+  }
+};
+
+const getQueryParameters = (url: string) => {
+  const queryIndex = url.indexOf('?');
+  if (queryIndex < 0) return {};
+  const hashIndex = url.indexOf('#', queryIndex);
+  return parseParameters(url.slice(queryIndex + 1, hashIndex < 0 ? undefined : hashIndex));
+};
+
+const getHeader = (headers: Record<string, string>, name: string) =>
+  Object.entries(headers).find(([key]) => key.toLowerCase() === name)?.[1] ?? '';
+
+const parseFormData = (body: string) => {
+  try {
+    const value = JSON.parse(body);
+    return value && typeof value === 'object' && !Array.isArray(value)
+      ? (value as Record<string, unknown>)
+      : {};
+  } catch {
+    return {};
+  }
+};
+
 const EmptyValue = ({ children }: { children: string }) => (
   <View className="items-center px-6 py-6">
     <Text className="text-center text-sm font-medium text-foreground">Nothing to show</Text>
@@ -61,10 +104,52 @@ const EmptyValue = ({ children }: { children: string }) => (
   </View>
 );
 
-const SectionHeader = ({ title, count }: { title: string; count?: number }) => (
+const CopyButton = ({ label, value }: { label: string; value: string }) => {
+  const [copied, setCopied] = useState(false);
+  const resetTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const [muted, link] = useThemeColor(['muted', 'link']);
+
+  useEffect(
+    () => () => {
+      if (resetTimer.current) clearTimeout(resetTimer.current);
+    },
+    []
+  );
+
+  const copy = () => {
+    Clipboard.setString(value);
+    setCopied(true);
+    if (resetTimer.current) clearTimeout(resetTimer.current);
+    resetTimer.current = setTimeout(() => setCopied(false), 1400);
+  };
+
+  return (
+    <Button
+      accessibilityLabel={copied ? 'Copied' : label}
+      className="h-7 w-7"
+      isIconOnly
+      onPress={copy}
+      size="sm"
+      variant="ghost"
+    >
+      {copied ? <Check color={link} size={14} /> : <Copy color={muted} size={14} />}
+    </Button>
+  );
+};
+
+const SectionHeader = ({
+  title,
+  count,
+  copyValue,
+}: {
+  title: string;
+  count?: number;
+  copyValue?: string;
+}) => (
   <View className="h-8 flex-row items-center border-b border-separator bg-surface-secondary px-4">
-    <Text className="text-xs font-semibold text-foreground">{title}</Text>
+    <Text className="min-w-0 flex-1 text-xs font-semibold text-foreground">{title}</Text>
     {count !== undefined && <Text className="ml-2 font-mono text-[10px] text-muted">{count}</Text>}
+    {copyValue !== undefined && <CopyButton label={`Copy ${title}`} value={copyValue} />}
   </View>
 );
 
@@ -89,7 +174,7 @@ const HeaderRows = ({ values }: { values?: Record<string, unknown> }) => {
             {name}
           </Text>
           <Text className="min-w-0 flex-1 text-xs leading-4 text-foreground" selectable>
-            {String(value)}
+            {Array.isArray(value) ? value.join('\n') : String(value)}
           </Text>
         </View>
       ))}
@@ -99,8 +184,9 @@ const HeaderRows = ({ values }: { values?: Record<string, unknown> }) => {
 
 const CodePanel = ({ title, children }: { title: string; children: string }) => (
   <View className="border-b border-separator bg-background">
-    <View className="border-b border-separator px-4 py-2">
-      <Text className="font-mono text-[10px] font-medium text-muted">{title}</Text>
+    <View className="h-8 flex-row items-center border-b border-separator px-4">
+      <Text className="min-w-0 flex-1 font-mono text-[10px] font-medium text-muted">{title}</Text>
+      <CopyButton label={`Copy ${title}`} value={children} />
     </View>
     <ScrollView horizontal nestedScrollEnabled>
       <Text className="p-4 font-mono text-[11px] leading-5 text-foreground" selectable>
@@ -147,6 +233,21 @@ const RequestDetails: React.FC<Props> = ({ request, onClose }) => {
   }, [request]);
 
   const requestBody = request.getRequestBody(!!request.gqlOperation);
+  const queryParameters = getQueryParameters(request.url);
+  const contentType = getHeader(request.requestHeaders, 'content-type').toLowerCase();
+  const isFormData =
+    request.requestBodyType === 'form-data' || contentType.includes('multipart/form-data');
+  const isUrlEncoded =
+    request.requestBodyType === 'urlencoded' ||
+    contentType.includes('application/x-www-form-urlencoded');
+  const formData = isFormData
+    ? parseFormData(request.dataSent)
+    : isUrlEncoded
+      ? parseParameters(request.dataSent)
+      : {};
+  const queryCount = Object.keys(queryParameters).length;
+  const formCount = Object.keys(formData).length;
+  const hasPayload = queryCount > 0 || formCount > 0 || !!requestBody;
   const status =
     request.status > 0 ? `${request.status}` : request.duration > 0 ? 'Failed' : 'Pending';
 
@@ -276,25 +377,36 @@ const RequestDetails: React.FC<Props> = ({ request, onClose }) => {
 
         <Tabs.Content className="flex-1" value="payload">
           <ScrollView className="flex-1" contentContainerClassName="pb-safe-offset-4">
-            <SectionHeader title="Request payload" />
-            {requestBody ? (
-              <CodePanel title="Body">{requestBody}</CodePanel>
-            ) : (
-              <EmptyValue>This request did not include a body.</EmptyValue>
+            {queryCount > 0 && (
+              <>
+                <SectionHeader
+                  title="Query string parameters"
+                  count={queryCount}
+                  copyValue={request.url.slice(request.url.indexOf('?') + 1).split('#')[0]}
+                />
+                <HeaderRows values={queryParameters} />
+              </>
+            )}
+            {formCount > 0 && (
+              <>
+                <SectionHeader
+                  title={isUrlEncoded ? 'Form parameters' : 'Form data'}
+                  count={formCount}
+                />
+                <HeaderRows values={formData} />
+              </>
+            )}
+            {requestBody && formCount === 0 && (
+              <>
+                <SectionHeader title="Request payload" />
+                <CodePanel title={contentType || 'Body'}>{requestBody}</CodePanel>
+              </>
+            )}
+            {!hasPayload && (
+              <EmptyValue>This request has no query parameters or request body.</EmptyValue>
             )}
             <SectionHeader title="Reproduce request" />
             <CodePanel title="cURL">{request.curlRequest}</CodePanel>
-            <View className="items-start px-4 pt-3">
-              <Button
-                className="h-9 rounded-md px-3"
-                onPress={() => Share.share({ message: request.curlRequest })}
-                size="sm"
-                variant="outline"
-              >
-                <Braces color={link} size={15} />
-                <Button.Label className="text-xs">Share cURL</Button.Label>
-              </Button>
-            </View>
           </ScrollView>
         </Tabs.Content>
 

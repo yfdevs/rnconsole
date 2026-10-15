@@ -1,6 +1,6 @@
 {
   "name": "@yfdevs/rnconsole",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "An in-app network and console inspector for React Native",
   "homepage": "https://github.com/yfdevs/rnconsole#readme",
   "bugs": {
@@ -49,6 +49,7 @@
     "example": "vp run --filter rnconsole-example start"
   },
   "devDependencies": {
+    "@react-native-clipboard/clipboard": "^1.16.3",
     "@react-native/metro-config": "0.86.3",
     "@types/react": "^19.2.14",
     "@types/react-test-renderer": "^19.3.0",
@@ -72,6 +73,7 @@
     "vite-plus": "1.1.0"
   },
   "peerDependencies": {
+    "@react-native-clipboard/clipboard": ">=1.16.3",
     "heroui-native": ">=1.0.5",
     "lucide-react-native": ">=0.468",
     "react": "*",

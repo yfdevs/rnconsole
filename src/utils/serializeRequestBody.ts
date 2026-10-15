@@ -14,6 +14,19 @@ function describeBinary(value: any): string | undefined {
   return undefined;
 }
 
+export type RequestBodyType = 'form-data' | 'urlencoded' | 'json' | 'text' | 'binary' | 'unknown';
+
+/** Preserve the original body shape so the inspector can present it like browser devtools. */
+export function getRequestBodyType(body: any): RequestBodyType {
+  if (body === null || body === undefined) return 'unknown';
+  if (Array.isArray(body?._parts)) return 'form-data';
+  if (body?.constructor?.name === 'URLSearchParams') return 'urlencoded';
+  if (describeBinary(body)) return 'binary';
+  if (typeof body === 'object') return 'json';
+  if (typeof body === 'string') return 'text';
+  return 'unknown';
+}
+
 /** Convert React Native request bodies into a stable, readable payload string. */
 export default function serializeRequestBody(body: any): string {
   if (body === null || body === undefined) return '';

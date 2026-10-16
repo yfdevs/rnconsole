@@ -6,7 +6,7 @@ import consoleLogger from '../../core/consoleLoggerSingleton';
 import NetworkRequestInfo from '../../core/NetworkRequestInfo';
 import { resolveTheme, type Theme, type ThemeName } from '../theme';
 import { setBackHandler } from '../../core/backHandler';
-import { ConsoleLogEntry, DeepPartial } from '../../core/types';
+import { ConsoleLogEntry, DeepPartial, type StorageAdapter } from '../../core/types';
 import RequestList from './RequestList';
 import RequestDetails from './RequestDetails';
 import createHar from '../../utils/createHar';
@@ -14,6 +14,7 @@ import Unmounted from './Unmounted';
 import { AppContextProvider } from './AppContext';
 import ConsolePanel from './ConsolePanel';
 import InspectorHeader, { type InspectorPanel } from './InspectorHeader';
+import StoragePanel from './StoragePanel';
 
 interface Props {
   theme?: ThemeName | DeepPartial<Theme>;
@@ -21,6 +22,7 @@ interface Props {
   compact?: boolean;
   maxRows?: number;
   onClose?: () => void;
+  storage?: StorageAdapter;
 }
 
 const sortRequests = (requests: NetworkRequestInfo[], sort: 'asc' | 'desc') => {
@@ -36,6 +38,7 @@ const NetworkLogger: React.FC<Props> = ({
   compact = false,
   maxRows,
   onClose,
+  storage,
 }) => {
   const resolvedTheme = resolveTheme(theme);
   const [requests, setRequests] = useState(logger.getRequests());
@@ -48,6 +51,7 @@ const NetworkLogger: React.FC<Props> = ({
   );
   const [consolePaused, setConsolePaused] = useState(consoleLogger.isPaused);
   const [panel, setPanel] = useState<InspectorPanel>('network');
+  const [storageCount, setStorageCount] = useState(0);
 
   const setShowDetails = useCallback((shouldShow: boolean) => {
     _setShowDetails(shouldShow);
@@ -116,52 +120,53 @@ const NetworkLogger: React.FC<Props> = ({
               </View>
             )}
             <View className={showDetails && !!request ? 'hidden' : 'flex-1'}>
-              {mounted && !logger.enabled && !requests.length ? (
-                <Unmounted />
-              ) : (
-                <>
-                  <InspectorHeader
-                    consoleCount={consoleEntries.length}
-                    onClose={onClose}
-                    onPanelChange={setPanel}
-                    panel={panel}
-                    requestCount={requests.length}
+              <InspectorHeader
+                consoleCount={consoleEntries.length}
+                onClose={onClose}
+                onPanelChange={setPanel}
+                panel={panel}
+                requestCount={requests.length}
+                storageCount={storage ? storageCount : undefined}
+              />
+              {panel === 'network' ? (
+                mounted && !logger.enabled && !requests.length ? (
+                  <Unmounted />
+                ) : (
+                  <RequestList
+                    compact={compact}
+                    embedded
+                    onClear={() => logger.clearRequests()}
+                    onExport={() => void getHar()}
+                    requestsInfo={requestsInfo}
+                    maxRows={maxRows ?? requests.length}
+                    paused={paused}
+                    onTogglePause={() => {
+                      setPaused((previous) => {
+                        logger.onPausedChange(!previous);
+                        return !previous;
+                      });
+                    }}
+                    onPressItem={(id) => {
+                      setRequest(requests.find((r) => r.id === id));
+                      setShowDetails(true);
+                    }}
                   />
-                  {panel === 'network' ? (
-                    <RequestList
-                      compact={compact}
-                      embedded
-                      onClear={() => logger.clearRequests()}
-                      onExport={() => void getHar()}
-                      requestsInfo={requestsInfo}
-                      maxRows={maxRows ?? requests.length}
-                      paused={paused}
-                      onTogglePause={() => {
-                        setPaused((previous) => {
-                          logger.onPausedChange(!previous);
-                          return !previous;
-                        });
-                      }}
-                      onPressItem={(id) => {
-                        setRequest(requests.find((r) => r.id === id));
-                        setShowDetails(true);
-                      }}
-                    />
-                  ) : (
-                    <ConsolePanel
-                      entries={consoleEntries}
-                      onClear={() => consoleLogger.clearEntries()}
-                      onTogglePause={() => {
-                        setConsolePaused((previous) => {
-                          consoleLogger.onPausedChange(!previous);
-                          return !previous;
-                        });
-                      }}
-                      paused={consolePaused}
-                    />
-                  )}
-                </>
-              )}
+                )
+              ) : panel === 'console' ? (
+                <ConsolePanel
+                  entries={consoleEntries}
+                  onClear={() => consoleLogger.clearEntries()}
+                  onTogglePause={() => {
+                    setConsolePaused((previous) => {
+                      consoleLogger.onPausedChange(!previous);
+                      return !previous;
+                    });
+                  }}
+                  paused={consolePaused}
+                />
+              ) : storage ? (
+                <StoragePanel onCountChange={setStorageCount} storage={storage} />
+              ) : null}
             </View>
           </View>
         </AppContextProvider>

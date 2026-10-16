@@ -49,6 +49,10 @@ export default defineConfig({
         replacement: new URL('./test/mocks/clipboard.ts', import.meta.url).pathname,
       },
       {
+        find: /^react-native-gesture-handler$/,
+        replacement: new URL('./test/mocks/gesture-handler.tsx', import.meta.url).pathname,
+      },
+      {
         find: /^uniwind$/,
         replacement: new URL('./test/mocks/uniwind.tsx', import.meta.url).pathname,
       },

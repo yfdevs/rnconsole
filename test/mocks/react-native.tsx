@@ -33,6 +33,7 @@ export const StyleSheet = {
 };
 
 export const Share = { share: vi.fn() };
+export const Alert = { alert: vi.fn() };
 export const BackHandler = {
   addEventListener: vi.fn(() => ({ remove: vi.fn() })),
   removeEventListener: vi.fn(),

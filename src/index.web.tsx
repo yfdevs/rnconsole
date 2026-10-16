@@ -25,6 +25,12 @@ export const clearConsoleLogs = () => {};
 export { getBackHandler } from './core/backHandler';
 
 export type { ThemeName, Theme } from './ui/theme';
-export type { ConsoleLogEntry, ConsoleLogLevel, StartConsoleLoggingOptions } from './core/types';
+export type {
+  ConsoleLogEntry,
+  ConsoleLogLevel,
+  StartConsoleLoggingOptions,
+  StorageAdapter,
+  StorageEntry,
+} from './core/types';
 
 export default () => null;

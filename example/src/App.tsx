@@ -3,6 +3,7 @@ import '../global.css';
 import React, { useCallback, useEffect, useState } from 'react';
 import { LogBox, StatusBar, Text, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { HeroUINativeProvider } from 'heroui-native/provider';
 import { Button } from 'heroui-native/button';
 import Activity from 'lucide-react-native/icons/activity';
@@ -46,6 +47,10 @@ export default function App() {
   useEffect(() => {
     startNetworkLogging({ forceEnable: true, ignoredHosts: ['127.0.0.1'], maxRequests: 200 });
     startConsoleLogging({ maxEntries: 200 });
+    void AsyncStorage.setItem(
+      'rnconsole:feature-flags',
+      JSON.stringify({ newInspector: true, compactRows: false })
+    );
     return () => {
       stopNetworkLogging();
       stopConsoleLogging();
@@ -186,7 +191,12 @@ export default function App() {
             </View>
           </View>
 
-          <NetworkLoggerOverlay buttonLabel="Inspect" maxRows={100} theme={theme} />
+          <NetworkLoggerOverlay
+            buttonLabel="Inspect"
+            maxRows={100}
+            storage={AsyncStorage}
+            theme={theme}
+          />
         </View>
       </HeroUINativeProvider>
     </GestureHandlerRootView>

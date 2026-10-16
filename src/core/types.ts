@@ -53,6 +53,21 @@ export type StartConsoleLoggingOptions = {
   maxEntries?: number;
 };
 
+/** Minimal async key-value interface used by the Storage inspector. */
+export type StorageAdapter = {
+  getAllKeys(): Promise<string[]>;
+  getItem(key: string): Promise<string | null>;
+  setItem(key: string, value: string): Promise<void>;
+  removeItem(key: string): Promise<void>;
+  /** Optional bulk read used when the storage implementation supports it. */
+  getMany?(keys: string[]): Promise<Record<string, string | null>>;
+};
+
+export type StorageEntry = {
+  key: string;
+  value: string | null;
+};
+
 export type NetworkRequestInfoRow = Pick<
   NetworkRequestInfo,
   'url' | 'gqlOperation' | 'id' | 'method' | 'status' | 'duration' | 'startTime'

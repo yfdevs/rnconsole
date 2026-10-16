@@ -1,19 +1,20 @@
 # rnconsole
 
-React Native 应用内调试工具。默认以浮动按钮挂载，点击后打开类似 Chrome DevTools 的全屏面板，可在 Network 与 Console 之间切换，查看请求详情和应用日志。
+React Native 应用内调试工具。默认以浮动按钮挂载，点击后打开类似 Chrome DevTools 的全屏面板，可在 Network、Console 与 Storage 之间切换，查看请求、应用日志和键值存储。
 
 ## 使用
 
 安装库以及 HeroUI Native 所需依赖：
 
 ```bash
-pnpm add @yfdevs/rnconsole heroui-native uniwind tailwindcss react-native-gesture-handler react-native-reanimated react-native-safe-area-context react-native-worklets react-native-svg lucide-react-native tailwind-merge tailwind-variants
+pnpm add @yfdevs/rnconsole @react-native-async-storage/async-storage heroui-native uniwind tailwindcss react-native-gesture-handler react-native-reanimated react-native-safe-area-context react-native-worklets react-native-svg lucide-react-native tailwind-merge tailwind-variants
 ```
 
 在应用入口最前面引入手势库，并用 Provider 包住应用：
 
 ```tsx
 import 'react-native-gesture-handler';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { HeroUINativeProvider } from 'heroui-native/provider';
 import { NetworkLoggerOverlay, startConsoleLogging, startNetworkLogging } from '@yfdevs/rnconsole';
@@ -26,7 +27,7 @@ export default function App() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <HeroUINativeProvider>
         <YourApp />
-        <NetworkLoggerOverlay maxRows={100} />
+        <NetworkLoggerOverlay maxRows={100} storage={AsyncStorage} />
       </HeroUINativeProvider>
     </GestureHandlerRootView>
   );
@@ -58,7 +59,11 @@ CSS 入口需要载入 HeroUI 和 rnconsole 主题：
 - 按日志等级与内容筛选，展开查看对象、数组和 Error 参数
 - Network 与 Console 分别暂停/恢复和清空，Network 支持导出 HAR
 - Headers、Payload、Response、Timing 分栏详情
+- Storage 面板支持搜索、刷新、复制、编辑与安全删除键值数据
 - 明暗主题和自定义主题变量
+
+`storage` 接受结构化的异步键值存储适配器，因此也可以接入 MMKV 或自研存储；实现
+`getAllKeys`、`getItem`、`setItem`、`removeItem`，并可选实现 `getMany` 即可。
 
 Console 默认保存最近 500 条日志，可通过 `startConsoleLogging({ maxEntries: 200 })`
 调整。需要在应用卸载或测试清理时恢复原始 console 方法，可调用 `stopConsoleLogging()`。

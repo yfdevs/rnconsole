@@ -5,12 +5,13 @@ import { useThemeColor } from 'heroui-native/hooks';
 import { Tabs } from 'heroui-native/tabs';
 import X from 'lucide-react-native/icons/x';
 
-export type InspectorPanel = 'network' | 'console';
+export type InspectorPanel = 'network' | 'console' | 'storage';
 
 interface Props {
   panel: InspectorPanel;
   requestCount: number;
   consoleCount: number;
+  storageCount?: number;
   onPanelChange: (panel: InspectorPanel) => void;
   onClose?: () => void;
 }
@@ -19,6 +20,7 @@ const InspectorHeader: React.FC<Props> = ({
   panel,
   requestCount,
   consoleCount,
+  storageCount,
   onPanelChange,
   onClose,
 }) => {
@@ -33,7 +35,7 @@ const InspectorHeader: React.FC<Props> = ({
           value={panel}
           variant="secondary"
         >
-          <Tabs.List background={null} className="h-10 w-56 flex-row border-b-0">
+          <Tabs.List background={null} className="h-10 w-full max-w-72 flex-row border-b-0">
             <Tabs.Indicator />
             <Tabs.Trigger className="h-10 flex-1" value="network">
               <Tabs.Label className="text-[11px]">Network · {requestCount}</Tabs.Label>
@@ -41,6 +43,11 @@ const InspectorHeader: React.FC<Props> = ({
             <Tabs.Trigger className="h-10 flex-1" value="console">
               <Tabs.Label className="text-[11px]">Console · {consoleCount}</Tabs.Label>
             </Tabs.Trigger>
+            {storageCount !== undefined && (
+              <Tabs.Trigger className="h-10 flex-1" value="storage">
+                <Tabs.Label className="text-[11px]">Storage · {storageCount}</Tabs.Label>
+              </Tabs.Trigger>
+            )}
           </Tabs.List>
         </Tabs>
         {onClose && (

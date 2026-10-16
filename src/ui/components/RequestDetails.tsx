@@ -1,6 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ScrollView, Share, Text, View } from 'react-native';
 import Clipboard from '@react-native-clipboard/clipboard';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { Button } from 'heroui-native/button';
 import { Chip } from 'heroui-native/chip';
 import { useThemeColor } from 'heroui-native/hooks';
@@ -25,6 +26,14 @@ const tabs: Array<{ label: string; value: Tab }> = [
   { label: 'Response', value: 'response' },
   { label: 'Timing', value: 'timing' },
 ];
+
+const EDGE_SWIPE_WIDTH = 28;
+const SWIPE_BACK_DISTANCE = 72;
+const SWIPE_BACK_VELOCITY = 700;
+const createPanGesture = Gesture.Pan;
+
+export const shouldNavigateBackFromSwipe = (translationX: number, velocityX: number) =>
+  translationX >= SWIPE_BACK_DISTANCE || velocityX >= SWIPE_BACK_VELOCITY;
 
 const getUrlParts = (url: string) => {
   try {
@@ -221,6 +230,18 @@ const RequestDetails: React.FC<Props> = ({ request, onClose }) => {
   const [tab, setTab] = useState<Tab>('headers');
   const [foreground, link] = useThemeColor(['foreground', 'link']);
   const { host, path } = getUrlParts(request.url);
+  const swipeBackGesture = useMemo(
+    () =>
+      createPanGesture()
+        .hitSlop({ left: 0, width: EDGE_SWIPE_WIDTH })
+        .activeOffsetX(12)
+        .failOffsetY([-18, 18])
+        .onEnd(({ translationX, velocityX }) => {
+          if (shouldNavigateBackFromSwipe(translationX, velocityX)) onClose();
+        })
+        .runOnJS(true),
+    [onClose]
+  );
 
   useEffect(() => {
     let active = true;
@@ -262,193 +283,197 @@ const RequestDetails: React.FC<Props> = ({ request, onClose }) => {
   };
 
   return (
-    <View className="flex-1 bg-background pt-safe">
-      <View className="border-b border-separator bg-background px-2 pb-2 pt-1">
-        <View className="flex-row items-center">
-          <Button
-            accessibilityLabel="Back to request list"
-            className="h-8 w-8"
-            isIconOnly
-            onPress={onClose}
-            size="sm"
-            variant="ghost"
-          >
-            <ArrowLeft color={foreground} size={18} />
-          </Button>
-          <View className="min-w-0 flex-1 px-2">
-            <Text className="text-[13px] font-semibold text-foreground" numberOfLines={1}>
-              {path}
-            </Text>
-            <Text className="mt-0.5 text-[10px] text-muted" numberOfLines={1}>
-              {host || request.url}
+    <GestureDetector gesture={swipeBackGesture}>
+      <View className="flex-1 bg-background pt-safe">
+        <View className="border-b border-separator bg-background px-2 pb-2 pt-1">
+          <View className="flex-row items-center">
+            <Button
+              accessibilityLabel="Back to request list"
+              className="h-8 w-8"
+              isIconOnly
+              onPress={onClose}
+              size="sm"
+              variant="ghost"
+            >
+              <ArrowLeft color={foreground} size={18} />
+            </Button>
+            <View className="min-w-0 flex-1 px-2">
+              <Text className="text-[13px] font-semibold text-foreground" numberOfLines={1}>
+                {path}
+              </Text>
+              <Text className="mt-0.5 text-[10px] text-muted" numberOfLines={1}>
+                {host || request.url}
+              </Text>
+            </View>
+            <Button
+              accessibilityLabel="Share request"
+              className="h-8 w-8"
+              isIconOnly
+              onPress={() => Share.share({ message: fullRequest() })}
+              size="sm"
+              variant="ghost"
+            >
+              <Share2 color={link} size={16} />
+            </Button>
+          </View>
+          <View className="mt-1 flex-row items-center px-10">
+            <Chip
+              animation="disable-all"
+              className="h-6 rounded px-1.5"
+              color="default"
+              size="sm"
+              variant="tertiary"
+            >
+              <Chip.Label className="font-mono text-[10px] font-semibold">
+                {request.method}
+              </Chip.Label>
+            </Chip>
+            <Chip
+              animation="disable-all"
+              className="ml-1.5 h-6 rounded px-1.5"
+              color={statusColor(request.status, request.duration)}
+              size="sm"
+              variant="soft"
+            >
+              <Chip.Label className="text-[10px] font-semibold">{status}</Chip.Label>
+            </Chip>
+            <Text className="ml-2 text-[11px] text-muted">{formatDuration(request.duration)}</Text>
+            <Text className="ml-2 min-w-0 flex-1 text-[11px] text-muted" numberOfLines={1}>
+              {request.responseContentType || 'Unknown type'}
             </Text>
           </View>
-          <Button
-            accessibilityLabel="Share request"
-            className="h-8 w-8"
-            isIconOnly
-            onPress={() => Share.share({ message: fullRequest() })}
-            size="sm"
-            variant="ghost"
-          >
-            <Share2 color={link} size={16} />
-          </Button>
         </View>
-        <View className="mt-1 flex-row items-center px-10">
-          <Chip
-            animation="disable-all"
-            className="h-6 rounded px-1.5"
-            color="default"
-            size="sm"
-            variant="tertiary"
-          >
-            <Chip.Label className="font-mono text-[10px] font-semibold">
-              {request.method}
-            </Chip.Label>
-          </Chip>
-          <Chip
-            animation="disable-all"
-            className="ml-1.5 h-6 rounded px-1.5"
-            color={statusColor(request.status, request.duration)}
-            size="sm"
-            variant="soft"
-          >
-            <Chip.Label className="text-[10px] font-semibold">{status}</Chip.Label>
-          </Chip>
-          <Text className="ml-2 text-[11px] text-muted">{formatDuration(request.duration)}</Text>
-          <Text className="ml-2 min-w-0 flex-1 text-[11px] text-muted" numberOfLines={1}>
-            {request.responseContentType || 'Unknown type'}
-          </Text>
-        </View>
-      </View>
 
-      <Tabs
-        className="flex-1 gap-0"
-        onValueChange={(value) => setTab(value as Tab)}
-        value={tab}
-        variant="secondary"
-      >
-        <Tabs.List
-          background={null}
-          className="h-9 flex-row border-b border-separator bg-background px-2"
+        <Tabs
+          className="flex-1 gap-0"
+          onValueChange={(value) => setTab(value as Tab)}
+          value={tab}
+          variant="secondary"
         >
-          <Tabs.Indicator />
-          {tabs.map((item) => (
-            <Tabs.Trigger className="h-9 flex-1" key={item.value} value={item.value}>
-              <Tabs.Label className="text-[11px]">{item.label}</Tabs.Label>
-            </Tabs.Trigger>
-          ))}
-        </Tabs.List>
+          <Tabs.List
+            background={null}
+            className="h-9 flex-row border-b border-separator bg-background px-2"
+          >
+            <Tabs.Indicator />
+            {tabs.map((item) => (
+              <Tabs.Trigger className="h-9 flex-1" key={item.value} value={item.value}>
+                <Tabs.Label className="text-[11px]">{item.label}</Tabs.Label>
+              </Tabs.Trigger>
+            ))}
+          </Tabs.List>
 
-        <Tabs.Content className="flex-1" value="headers">
-          <ScrollView className="flex-1" contentContainerClassName="pb-safe-offset-4">
-            <SectionHeader title="Overview" />
-            <View className="border-b border-separator bg-background">
-              <View className="flex-row px-4 py-2.5">
-                <Text className="w-24 font-mono text-[10px] font-medium text-muted">
-                  Request URL
-                </Text>
-                <Text className="min-w-0 flex-1 text-xs leading-4 text-foreground" selectable>
-                  {request.url}
-                </Text>
+          <Tabs.Content className="flex-1" value="headers">
+            <ScrollView className="flex-1" contentContainerClassName="pb-safe-offset-4">
+              <SectionHeader title="Overview" />
+              <View className="border-b border-separator bg-background">
+                <View className="flex-row px-4 py-2.5">
+                  <Text className="w-24 font-mono text-[10px] font-medium text-muted">
+                    Request URL
+                  </Text>
+                  <Text className="min-w-0 flex-1 text-xs leading-4 text-foreground" selectable>
+                    {request.url}
+                  </Text>
+                </View>
+                <View className="flex-row border-t border-separator">
+                  <Stat label="Method" value={request.method} />
+                  <View className="w-px bg-separator" />
+                  <Stat label="Status" value={status} />
+                  <View className="w-px bg-separator" />
+                  <Stat label="Duration" value={formatDuration(request.duration)} />
+                </View>
               </View>
-              <View className="flex-row border-t border-separator">
-                <Stat label="Method" value={request.method} />
-                <View className="w-px bg-separator" />
-                <Stat label="Status" value={status} />
-                <View className="w-px bg-separator" />
-                <Stat label="Duration" value={formatDuration(request.duration)} />
+
+              <SectionHeader
+                title="Request headers"
+                count={Object.keys(request.requestHeaders).length}
+              />
+              <HeaderRows values={request.requestHeaders} />
+
+              <SectionHeader
+                title="Response headers"
+                count={Object.keys(request.responseHeaders).length}
+              />
+              <HeaderRows values={request.responseHeaders} />
+            </ScrollView>
+          </Tabs.Content>
+
+          <Tabs.Content className="flex-1" value="payload">
+            <ScrollView className="flex-1" contentContainerClassName="pb-safe-offset-4">
+              {queryCount > 0 && (
+                <>
+                  <SectionHeader
+                    title="Query string parameters"
+                    count={queryCount}
+                    copyValue={request.url.slice(request.url.indexOf('?') + 1).split('#')[0]}
+                  />
+                  <HeaderRows values={queryParameters} />
+                </>
+              )}
+              {formCount > 0 && (
+                <>
+                  <SectionHeader
+                    title={isUrlEncoded ? 'Form parameters' : 'Form data'}
+                    count={formCount}
+                  />
+                  <HeaderRows values={formData} />
+                </>
+              )}
+              {requestBody && formCount === 0 && (
+                <>
+                  <SectionHeader title="Request payload" />
+                  <CodePanel title={contentType || 'Body'}>{requestBody}</CodePanel>
+                </>
+              )}
+              {!hasPayload && (
+                <EmptyValue>This request has no query parameters or request body.</EmptyValue>
+              )}
+              <SectionHeader title="Reproduce request" />
+              <CodePanel title="cURL">{request.curlRequest}</CodePanel>
+            </ScrollView>
+          </Tabs.Content>
+
+          <Tabs.Content className="flex-1" value="response">
+            <ScrollView className="flex-1" contentContainerClassName="pb-safe-offset-4">
+              <SectionHeader title="Response body" />
+              {responseBody ? (
+                <CodePanel title={request.responseContentType || 'Response'}>
+                  {responseBody}
+                </CodePanel>
+              ) : (
+                <EmptyValue>The server returned an empty response body.</EmptyValue>
+              )}
+            </ScrollView>
+          </Tabs.Content>
+
+          <Tabs.Content className="flex-1" value="timing">
+            <ScrollView className="flex-1" contentContainerClassName="pb-safe-offset-4">
+              <SectionHeader title="Request timing" />
+              <View className="border-b border-separator bg-background">
+                <View className="flex-row">
+                  <Stat label="Duration" value={formatDuration(request.duration)} />
+                  <View className="w-px bg-separator" />
+                  <Stat label="Transfer size" value={formatBytes(request.responseSize)} />
+                </View>
+                <View className="flex-row border-t border-separator">
+                  <Stat label="Timeout" value={request.timeout ? `${request.timeout} ms` : '—'} />
+                  <View className="w-px bg-separator" />
+                  <Stat
+                    label="Started"
+                    value={
+                      request.startTime ? new Date(request.startTime).toLocaleTimeString() : '—'
+                    }
+                  />
+                </View>
               </View>
-            </View>
-
-            <SectionHeader
-              title="Request headers"
-              count={Object.keys(request.requestHeaders).length}
-            />
-            <HeaderRows values={request.requestHeaders} />
-
-            <SectionHeader
-              title="Response headers"
-              count={Object.keys(request.responseHeaders).length}
-            />
-            <HeaderRows values={request.responseHeaders} />
-          </ScrollView>
-        </Tabs.Content>
-
-        <Tabs.Content className="flex-1" value="payload">
-          <ScrollView className="flex-1" contentContainerClassName="pb-safe-offset-4">
-            {queryCount > 0 && (
-              <>
-                <SectionHeader
-                  title="Query string parameters"
-                  count={queryCount}
-                  copyValue={request.url.slice(request.url.indexOf('?') + 1).split('#')[0]}
-                />
-                <HeaderRows values={queryParameters} />
-              </>
-            )}
-            {formCount > 0 && (
-              <>
-                <SectionHeader
-                  title={isUrlEncoded ? 'Form parameters' : 'Form data'}
-                  count={formCount}
-                />
-                <HeaderRows values={formData} />
-              </>
-            )}
-            {requestBody && formCount === 0 && (
-              <>
-                <SectionHeader title="Request payload" />
-                <CodePanel title={contentType || 'Body'}>{requestBody}</CodePanel>
-              </>
-            )}
-            {!hasPayload && (
-              <EmptyValue>This request has no query parameters or request body.</EmptyValue>
-            )}
-            <SectionHeader title="Reproduce request" />
-            <CodePanel title="cURL">{request.curlRequest}</CodePanel>
-          </ScrollView>
-        </Tabs.Content>
-
-        <Tabs.Content className="flex-1" value="response">
-          <ScrollView className="flex-1" contentContainerClassName="pb-safe-offset-4">
-            <SectionHeader title="Response body" />
-            {responseBody ? (
-              <CodePanel title={request.responseContentType || 'Response'}>
-                {responseBody}
-              </CodePanel>
-            ) : (
-              <EmptyValue>The server returned an empty response body.</EmptyValue>
-            )}
-          </ScrollView>
-        </Tabs.Content>
-
-        <Tabs.Content className="flex-1" value="timing">
-          <ScrollView className="flex-1" contentContainerClassName="pb-safe-offset-4">
-            <SectionHeader title="Request timing" />
-            <View className="border-b border-separator bg-background">
-              <View className="flex-row">
-                <Stat label="Duration" value={formatDuration(request.duration)} />
-                <View className="w-px bg-separator" />
-                <Stat label="Transfer size" value={formatBytes(request.responseSize)} />
-              </View>
-              <View className="flex-row border-t border-separator">
-                <Stat label="Timeout" value={request.timeout ? `${request.timeout} ms` : '—'} />
-                <View className="w-px bg-separator" />
-                <Stat
-                  label="Started"
-                  value={request.startTime ? new Date(request.startTime).toLocaleTimeString() : '—'}
-                />
-              </View>
-            </View>
-            <Text className="mx-4 mt-3 text-xs leading-5 text-muted">
-              Detailed DNS, connection, and server timing are not exposed by React Native
-              XMLHttpRequest.
-            </Text>
-          </ScrollView>
-        </Tabs.Content>
-      </Tabs>
-    </View>
+              <Text className="mx-4 mt-3 text-xs leading-5 text-muted">
+                Detailed DNS, connection, and server timing are not exposed by React Native
+                XMLHttpRequest.
+              </Text>
+            </ScrollView>
+          </Tabs.Content>
+        </Tabs>
+      </View>
+    </GestureDetector>
   );
 };
 
